@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<!-- saved from url=(0085)file:///Users/hyphens/Documents/Claude/Projects/CA%20dashboard/ax-priority-board.html -->
+<html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AX 우선순위 보드</title>
+<link href="./AX 우선순위 보드_files/css2" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #F1F5F9;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  .header {
+    background: linear-gradient(90deg, #F25C05 0%, #FE9A00 100%);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 100;
+    position: relative;
+  }
+  .header h1 { font-size: 16px; font-weight: 900; color: #FFF; }
+  .header .hint { font-size: 12px; color: rgba(255,255,255,0.8); }
+  .header-actions { display: flex; gap: 8px; }
+  .header-btn {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .header-btn:hover { transform: translateY(-1px); }
+  .header-btn.primary { background: #FFF; color: #F25C05; }
+  .header-btn.secondary { background: rgba(255,255,255,0.2); color: #FFF; }
+  .header-btn.danger { background: rgba(255,80,80,0.3); color: #FFF; }
+  .header-btn.active { outline: 2px solid #FFF; outline-offset: 2px; }
+
+  .mode-indicator {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0F172A;
+    color: #FFF;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    z-index: 200;
+    display: none;
+    animation: fadeIn 0.2s;
+  }
+  .mode-indicator.show { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+  .board {
+    position: relative;
+    width: 100vw;
+    height: calc(100vh - 52px);
+    overflow: auto;
+  }
+
+  .arrow-layer {
+    position: absolute;
+    top: 0; left: 0;
+    width: 4000px; height: 3000px;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .arrow-layer path {
+    pointer-events: stroke;
+    cursor: pointer;
+  }
+
+  /* 블록 */
+  .block {
+    position: absolute;
+    background: #FFF;
+    border: 2px solid #E2E8F0;
+    border-radius: 14px;
+    padding: 14px 18px;
+    cursor: grab;
+    z-index: 10;
+    min-width: 140px;
+    max-width: 320px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: box-shadow 0.2s, border-color 0.2s;
+    user-select: none;
+  }
+  .block:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+  .block.dragging { cursor: grabbing; box-shadow: 0 12px 32px rgba(0,0,0,0.18); z-index: 50; opacity: 0.9; }
+  .block.major {
+    background: #FFF4ED;
+    border-color: #F25C05;
+  }
+  .block .block-label {
+    font-size: 13px;
+    font-weight: 800;
+    color: #0F172A;
+    line-height: 1.4;
+    outline: none;
+  }
+  .block.major .block-label { color: #F25C05; }
+  .block .block-desc {
+    font-size: 11px;
+    color: #64748B;
+    margin-top: 4px;
+    line-height: 1.4;
+    outline: none;
+  }
+  .block .block-label[contenteditable="true"],
+  .block .block-desc[contenteditable="true"] {
+    background: rgba(242,92,5,0.08);
+    border-radius: 4px;
+    padding: 2px 4px;
+    cursor: text;
+  }
+
+  .block.connect-source { border-color: #22C55E; box-shadow: 0 0 0 3px rgba(34,197,94,0.3); }
+
+  /* 블록 삭제 버튼 */
+  .block-delete {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    background: #EF4444;
+    color: #FFF;
+    border: none;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 12;
+    line-height: 1;
+  }
+  .block:hover .block-delete { display: flex; }
+
+  /* 화살표 라벨 */
+  .arrow-label {
+    position: absolute;
+    background: #FFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #64748B;
+    z-index: 5;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #0F172A;
+    color: #FFF;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 300;
+  }
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+
+  .help-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #FFF;
+    border: 2px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 12px;
+    color: #64748B;
+    line-height: 1.8;
+    z-index: 100;
+    max-width: 260px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .help-panel b { color: #0F172A; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>AX 우선순위 보드</h1>
+    <div class="hint">블록을 드래그해서 배치하고, 화살표로 연결하세요</div>
+  </div>
+  <div class="header-actions">
+    <button class="header-btn secondary" id="btnAdd" onclick="addBlock()">+ 블록 추가</button>
+    <button class="header-btn secondary" id="btnConnect" onclick="toggleConnectMode()">화살표 연결</button>
+    <button class="header-btn danger" id="btnDelete" onclick="toggleDeleteMode()">화살표 삭제</button>
+    <button class="header-btn primary" onclick="exportMermaid()">Mermaid 복사</button>
+  </div>
+</div>
+
+<div class="mode-indicator" id="modeIndicator"></div>
+
+<div class="board" id="board">
+  <svg class="arrow-layer" id="arrowLayer">
+    <defs>
+      <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#94A3B8"></polygon>
+      </marker>
+      <marker id="arrowhead-red" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#EF4444"></polygon>
+      </marker>
+    </defs>
+  <path d="M 495 100 L 495 115 L 270 115 L 270 130" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="0"></path><path d="M 270 200 L 270 215 L 158 215 L 158 230" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="1"></path><path d="M 270 200 L 270 215 L 370 215 L 370 230" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="2"></path><path d="M 495 100 L 495 115 L 792 115 L 792 130" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="3"></path><path d="M 792 200 L 792 225 L 593.5 225 L 593.5 250" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="4"></path><path d="M 792 200 L 792 225 L 801.5 225 L 801.5 250" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="5"></path><path d="M 792 200 L 792 265 L 592 265 L 592 330" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="6"></path><path d="M 792 200 L 792 265 L 820 265 L 820 330" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="7"></path><path d="M 792 200 L 792 265 L 1040 265 L 1040 330" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="8"></path><path d="M 820 380 L 820 410 L 903 410 L 903 440" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="9"></path><path d="M 1040 380 L 1040 410 L 903 410 L 903 440" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="10"></path><path d="M 903 510 L 903 535 L 684.5 535 L 684.5 560" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="11"></path><path d="M 903 510 L 903 535 L 1112 535 L 1112 560" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="12"></path><path d="M 684.5 630 L 684.5 645 L 675.5 645 L 675.5 660" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="13"></path><path d="M 675.5 710 L 675.5 730 L 670 730 L 670 750" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="14"></path><path d="M 592 380 L 592 625 L 598 625 L 598 870" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="15"></path><path d="M 1112 630 L 1112 750 L 598 750 L 598 870" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="16"></path><path d="M 598 940 L 598 955 L 470 955 L 470 970" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="17"></path><path d="M 540 995 L 560 995" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="18"></path><path d="M 700 995 L 700 995" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="19"></path><path d="M 770 970 L 770 635 L 801.5 635 L 801.5 300" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="20"></path></svg>
+<div class="block major" id="block-A" style="left: 420px; top: 30px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;A&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">ⅰ. 상위 목표 설정</div>
+    <div class="block-desc">달성하려는 임팩트가 뭔지</div>
+  </div><div class="block " id="block-A1" style="left: 200px; top: 130px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;A1&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">하위 목표 설정</div>
+    <div class="block-desc">예: 수동 리소스 절감</div>
+  </div><div class="block " id="block-A2" style="left: 80px; top: 230px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;A2&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">As-Is 수치 산출 + 싱크</div>
+    <div class="block-desc" style="display:none"></div>
+  </div><div class="block " id="block-A3" style="left: 300px; top: 230px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;A3&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">To-Be 기준선 합의</div>
+    <div class="block-desc" style="display:none"></div>
+  </div><div class="block major" id="block-B" style="left: 700px; top: 130px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;B&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">ⅱ. 여태까지 한 것 중간 정리</div>
+    <div class="block-desc">+ 앞으로의 공유 체계 수립</div>
+  </div><div class="block " id="block-B1" style="left: 500px; top: 250px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;B1&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">BizOps 진행 현황 한 판 정리</div>
+    <div class="block-desc" style="display:none"></div>
+  </div><div class="block " id="block-B3" style="left: 720px; top: 250px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;B3&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">방향성 맞는지 확인·소통</div>
+    <div class="block-desc" style="display:none"></div>
+  </div><div class="block " id="block-B4" style="left: 500px; top: 330px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;B4&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">BizOps 추가 진행 영역 발굴</div>
+    <div class="block-desc" style="display:none"></div>
+  </div><div class="block " id="block-B5" style="left: 750px; top: 330px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;B5&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">성공 사례 문서화</div>
+    <div class="block-desc" style="display:none"></div>
+  </div><div class="block " id="block-B6" style="left: 970px; top: 330px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;B6&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">사용 도구 현황 파악</div>
+    <div class="block-desc" style="display:none"></div>
+  </div><div class="block major" id="block-C" style="left: 820px; top: 440px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;C&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">ⅲ. 표준 워크플로우 정의</div>
+    <div class="block-desc">복제 가능한 매뉴얼 만들기</div>
+  </div><div class="block major" id="block-D" style="left: 600px; top: 560px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;D&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">ⅳ. 총괄 어드민 체계 구성</div>
+    <div class="block-desc">언어·데이터·배포 통합 관리</div>
+  </div><div class="block " id="block-D1" style="left: 600px; top: 660px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;D1&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">데이터 정의 및 마이그</div>
+    <div class="block-desc" style="display:none"></div>
+  </div><div class="block " id="block-D2" style="left: 600px; top: 750px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;D2&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">총괄 어드민 완성</div>
+    <div class="block-desc" style="display:none"></div>
+  </div><div class="block major" id="block-E" style="left: 1020px; top: 560px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;E&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">ⅴ. 신규 영역 발굴 (CA, CX)</div>
+    <div class="block-desc">자동화 대상 식별</div>
+  </div><div class="block major" id="block-F" style="left: 500px; top: 870px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;F&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">ⅵ. 담당자 할당→플래닝→착수</div>
+    <div class="block-desc">공통 실행 사이클</div>
+  </div><div class="block " id="block-F1" style="left: 400px; top: 970px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;F1&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">담당자 할당</div>
+    <div class="block-desc" style="display:none"></div>
+  </div><div class="block " id="block-F2" style="left: 560px; top: 970px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;F2&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">플래닝</div>
+    <div class="block-desc" style="display:none"></div>
+  </div><div class="block " id="block-F3" style="left: 700px; top: 970px;">
+    <button class="block-delete" onclick="deleteBlock(&#39;F3&#39;)" title="블록 삭제">×</button>
+    <div class="block-label">착수 + 실행</div>
+    <div class="block-desc" style="display:none"></div>
+  </div><div class="arrow-label" style="left: 967.5px; top: 525px;">선행되면 도움될 것</div><div class="arrow-label" style="left: 555px; top: 615px;">BizOps 추가분</div><div class="arrow-label" style="left: 815px; top: 740px;">CA/CX 신규분</div><div class="arrow-label" style="left: 745.75px; top: 625px;">결과를 다시 공유</div></div>
+
+<div class="help-panel">
+  <b>드래그</b> — 블록 이동<br>
+  <b>더블클릭</b> — 텍스트 편집<br>
+  <b>+ 블록 추가</b> — 새 블록 생성<br>
+  <b>화살표 연결</b> — 블록 두 개 순서대로 클릭<br>
+  <b>화살표 삭제</b> — 화살표 클릭하면 삭제<br>
+  <b>Mermaid 복사</b> — 노션 붙여넣기용<br>
+  <b>ESC</b> — 드래그 모드로 복귀
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// 블록 데이터
+const blocksData = [
+  { id: 'A', label: 'ⅰ. 상위 목표 설정', desc: '달성하려는 임팩트가 뭔지', major: true, x: 420, y: 30 },
+  { id: 'A1', label: '하위 목표 설정', desc: '예: 수동 리소스 절감', major: false, x: 200, y: 130 },
+  { id: 'A2', label: 'As-Is 수치 산출 + 싱크', desc: '', major: false, x: 80, y: 230 },
+  { id: 'A3', label: 'To-Be 기준선 합의', desc: '', major: false, x: 300, y: 230 },
+
+  { id: 'B', label: 'ⅱ. 여태까지 한 것 중간 정리', desc: '+ 앞으로의 공유 체계 수립', major: true, x: 700, y: 130 },
+  { id: 'B1', label: 'BizOps 진행 현황 한 판 정리', desc: '', major: false, x: 500, y: 250 },
+  { id: 'B3', label: '방향성 맞는지 확인·소통', desc: '', major: false, x: 720, y: 250 },
+  { id: 'B4', label: 'BizOps 추가 진행 영역 발굴', desc: '', major: false, x: 500, y: 330 },
+  { id: 'B5', label: '성공 사례 문서화', desc: '', major: false, x: 750, y: 330 },
+  { id: 'B6', label: '사용 도구 현황 파악', desc: '', major: false, x: 970, y: 330 },
+
+  { id: 'C', label: 'ⅲ. 표준 워크플로우 정의', desc: '복제 가능한 매뉴얼 만들기', major: true, x: 820, y: 440 },
+  { id: 'D', label: 'ⅳ. 총괄 어드민 체계 구성', desc: '언어·데이터·배포 통합 관리', major: true, x: 600, y: 560 },
+  { id: 'D1', label: '데이터 정의 및 마이그', desc: '', major: false, x: 600, y: 660 },
+  { id: 'D2', label: '총괄 어드민 완성', desc: '', major: false, x: 600, y: 750 },
+
+  { id: 'E', label: 'ⅴ. 신규 영역 발굴 (CA, CX)', desc: '자동화 대상 식별', major: true, x: 1020, y: 560 },
+
+  { id: 'F', label: 'ⅵ. 담당자 할당→플래닝→착수', desc: '공통 실행 사이클', major: true, x: 500, y: 870 },
+  { id: 'F1', label: '담당자 할당', desc: '', major: false, x: 400, y: 970 },
+  { id: 'F2', label: '플래닝', desc: '', major: false, x: 560, y: 970 },
+  { id: 'F3', label: '착수 + 실행', desc: '', major: false, x: 700, y: 970 },
+];
+
+let arrowsData = [
+  { from: 'A', to: 'A1' },
+  { from: 'A1', to: 'A2' },
+  { from: 'A1', to: 'A3' },
+  { from: 'A', to: 'B' },
+  { from: 'B', to: 'B1' },
+  { from: 'B', to: 'B3' },
+  { from: 'B', to: 'B4' },
+  { from: 'B', to: 'B5' },
+  { from: 'B', to: 'B6' },
+  { from: 'B5', to: 'C' },
+  { from: 'B6', to: 'C' },
+  { from: 'C', to: 'D' },
+  { from: 'C', to: 'E', label: '선행되면 도움될 것' },
+  { from: 'D', to: 'D1' },
+  { from: 'D1', to: 'D2' },
+  { from: 'B4', to: 'F', label: 'BizOps 추가분' },
+  { from: 'E', to: 'F', label: 'CA/CX 신규분' },
+  { from: 'F', to: 'F1' },
+  { from: 'F1', to: 'F2' },
+  { from: 'F2', to: 'F3' },
+  { from: 'F3', to: 'B3', label: '결과를 다시 공유' },
+];
+
+let mode = 'drag';
+let connectSource = null;
+let dragState = null;
+let blockCounter = 100;
+
+const board = document.getElementById('board');
+const arrowLayer = document.getElementById('arrowLayer');
+const modeIndicator = document.getElementById('modeIndicator');
+
+// 블록 렌더링
+function renderBlock(b) {
+  const div = document.createElement('div');
+  div.className = `block ${b.major ? 'major' : ''}`;
+  div.id = `block-${b.id}`;
+  div.style.left = b.x + 'px';
+  div.style.top = b.y + 'px';
+  div.innerHTML = `
+    <button class="block-delete" onclick="deleteBlock('${b.id}')" title="블록 삭제">×</button>
+    <div class="block-label">${b.label}</div>
+    ${b.desc ? `<div class="block-desc">${b.desc}</div>` : `<div class="block-desc" style="display:none"></div>`}
+  `;
+
+  div.addEventListener('mousedown', (e) => onBlockMouseDown(e, b));
+  div.addEventListener('click', (e) => onBlockClick(e, b));
+
+  // 더블클릭 → 텍스트 편집
+  div.addEventListener('dblclick', (e) => {
+    e.stopPropagation();
+    const labelEl = div.querySelector('.block-label');
+    const descEl = div.querySelector('.block-desc');
+    labelEl.contentEditable = 'true';
+    descEl.style.display = 'block';
+    descEl.contentEditable = 'true';
+    labelEl.focus();
+
+    // 편집 종료 처리
+    const finishEdit = () => {
+      labelEl.contentEditable = 'false';
+      descEl.contentEditable = 'false';
+      b.label = labelEl.textContent.trim();
+      b.desc = descEl.textContent.trim();
+      if (!b.desc) descEl.style.display = 'none';
+    };
+    labelEl.addEventListener('blur', finishEdit, { once: true });
+    descEl.addEventListener('blur', () => {
+      setTimeout(finishEdit, 100);
+    }, { once: true });
+  });
+
+  board.appendChild(div);
+}
+
+function renderAllBlocks() {
+  document.querySelectorAll('.block').forEach(el => el.remove());
+  blocksData.forEach(b => renderBlock(b));
+}
+
+// 블록 추가
+function addBlock() {
+  blockCounter++;
+  const id = 'N' + blockCounter;
+  const scrollX = board.scrollLeft;
+  const scrollY = board.scrollTop;
+  const newBlock = {
+    id,
+    label: '새 블록',
+    desc: '더블클릭으로 편집',
+    major: false,
+    x: 200 + scrollX,
+    y: 200 + scrollY,
+  };
+  blocksData.push(newBlock);
+  renderBlock(newBlock);
+  showToast('새 블록이 추가되었습니다. 더블클릭하여 편집하세요.');
+}
+
+// 블록 삭제
+function deleteBlock(id) {
+  const idx = blocksData.findIndex(b => b.id === id);
+  if (idx === -1) return;
+  blocksData.splice(idx, 1);
+  // 연결된 화살표도 삭제
+  arrowsData = arrowsData.filter(a => a.from !== id && a.to !== id);
+  const el = document.getElementById(`block-${id}`);
+  if (el) el.remove();
+  renderArrows();
+  showToast('블록이 삭제되었습니다');
+}
+
+// 드래그
+function onBlockMouseDown(e, block) {
+  if (mode !== 'drag') return;
+  if (e.target.contentEditable === 'true' || e.target.classList.contains('block-delete')) return;
+  e.preventDefault();
+  const div = document.getElementById(`block-${block.id}`);
+  const rect = div.getBoundingClientRect();
+  dragState = { block, div, offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top };
+  div.classList.add('dragging');
+}
+
+document.addEventListener('mousemove', (e) => {
+  if (!dragState) return;
+  const { block, div, offsetX, offsetY } = dragState;
+  const boardRect = board.getBoundingClientRect();
+  block.x = Math.max(0, e.clientX - boardRect.left + board.scrollLeft - offsetX);
+  block.y = Math.max(0, e.clientY - boardRect.top + board.scrollTop - offsetY);
+  div.style.left = block.x + 'px';
+  div.style.top = block.y + 'px';
+  renderArrows();
+});
+
+document.addEventListener('mouseup', () => {
+  if (dragState) {
+    dragState.div.classList.remove('dragging');
+    dragState = null;
+  }
+});
+
+// 블록 클릭 (연결 모드)
+function onBlockClick(e, block) {
+  if (mode === 'connect') {
+    e.stopPropagation();
+    if (!connectSource) {
+      connectSource = block;
+      document.getElementById(`block-${block.id}`).classList.add('connect-source');
+      showMode('두 번째 블록을 클릭하세요 (→ 방향)');
+    } else {
+      if (connectSource.id !== block.id) {
+        const exists = arrowsData.some(a => a.from === connectSource.id && a.to === block.id);
+        if (!exists) {
+          arrowsData.push({ from: connectSource.id, to: block.id });
+          renderArrows();
+          showToast(`${connectSource.label} → ${block.label} 연결됨`);
+        }
+      }
+      document.querySelectorAll('.connect-source').forEach(el => el.classList.remove('connect-source'));
+      connectSource = null;
+      showMode('화살표 연결 모드 — 시작 블록을 클릭하세요');
+    }
+  }
+}
+
+// 직각 화살표 경로 계산
+function getOrthogonalPath(fromRect, toRect) {
+  const fromCX = fromRect.x + fromRect.w / 2;
+  const fromCY = fromRect.y + fromRect.h / 2;
+  const toCX = toRect.x + toRect.w / 2;
+  const toCY = toRect.y + toRect.h / 2;
+
+  let startX, startY, endX, endY;
+  const gap = 20;
+
+  // 세로 방향 판단: from이 위에 있으면 아래→위, 아니면 좌우
+  const dy = toCY - fromCY;
+  const dx = toCX - fromCX;
+
+  if (Math.abs(dy) > Math.abs(dx) * 0.3) {
+    // 주로 세로 이동
+    if (dy > 0) {
+      // from 아래 → to 위
+      startX = fromCX;
+      startY = fromRect.y + fromRect.h;
+      endX = toCX;
+      endY = toRect.y;
+    } else {
+      // from 위 → to 아래
+      startX = fromCX;
+      startY = fromRect.y;
+      endX = toCX;
+      endY = toRect.y + toRect.h;
+    }
+
+    const midY = (startY + endY) / 2;
+
+    if (Math.abs(startX - endX) < 5) {
+      // 거의 일직선 — 직선
+      return {
+        path: `M ${startX} ${startY} L ${endX} ${endY}`,
+        midX: (startX + endX) / 2,
+        midY: midY
+      };
+    } else {
+      // 직각 꺾기: 아래로 → 가로 → 아래로
+      return {
+        path: `M ${startX} ${startY} L ${startX} ${midY} L ${endX} ${midY} L ${endX} ${endY}`,
+        midX: (startX + endX) / 2,
+        midY: midY
+      };
+    }
+  } else {
+    // 주로 가로 이동
+    if (dx > 0) {
+      startX = fromRect.x + fromRect.w;
+      startY = fromCY;
+      endX = toRect.x;
+      endY = toCY;
+    } else {
+      startX = fromRect.x;
+      startY = fromCY;
+      endX = toRect.x + toRect.w;
+      endY = toCY;
+    }
+
+    const midX = (startX + endX) / 2;
+
+    if (Math.abs(startY - endY) < 5) {
+      return {
+        path: `M ${startX} ${startY} L ${endX} ${endY}`,
+        midX: midX,
+        midY: (startY + endY) / 2
+      };
+    } else {
+      return {
+        path: `M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${endY} L ${endX} ${endY}`,
+        midX: midX,
+        midY: (startY + endY) / 2
+      };
+    }
+  }
+}
+
+// 화살표 렌더링
+function renderArrows() {
+  arrowLayer.querySelectorAll('path').forEach(el => el.remove());
+  document.querySelectorAll('.arrow-label').forEach(el => el.remove());
+
+  arrowsData.forEach((arrow, idx) => {
+    const fromDiv = document.getElementById(`block-${arrow.from}`);
+    const toDiv = document.getElementById(`block-${arrow.to}`);
+    if (!fromDiv || !toDiv) return;
+
+    const fromRect = { x: parseFloat(fromDiv.style.left), y: parseFloat(fromDiv.style.top), w: fromDiv.offsetWidth, h: fromDiv.offsetHeight };
+    const toRect = { x: parseFloat(toDiv.style.left), y: parseFloat(toDiv.style.top), w: toDiv.offsetWidth, h: toDiv.offsetHeight };
+
+    const { path: d, midX, midY } = getOrthogonalPath(fromRect, toRect);
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('stroke', '#94A3B8');
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('marker-end', 'url(#arrowhead)');
+    path.dataset.idx = idx;
+
+    path.addEventListener('mouseenter', () => {
+      if (mode === 'delete') {
+        path.setAttribute('stroke', '#EF4444');
+        path.setAttribute('stroke-width', '4');
+        path.setAttribute('marker-end', 'url(#arrowhead-red)');
+      }
+    });
+    path.addEventListener('mouseleave', () => {
+      if (mode === 'delete') {
+        path.setAttribute('stroke', '#94A3B8');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('marker-end', 'url(#arrowhead)');
+      }
+    });
+    path.addEventListener('click', (e) => {
+      if (mode === 'delete') {
+        e.stopPropagation();
+        arrowsData.splice(idx, 1);
+        renderArrows();
+        showToast('화살표 삭제됨');
+      }
+    });
+
+    arrowLayer.appendChild(path);
+
+    if (arrow.label) {
+      const labelDiv = document.createElement('div');
+      labelDiv.className = 'arrow-label';
+      labelDiv.textContent = arrow.label;
+      labelDiv.style.left = (midX - 40) + 'px';
+      labelDiv.style.top = (midY - 10) + 'px';
+      board.appendChild(labelDiv);
+    }
+  });
+}
+
+// 모드 전환
+function toggleConnectMode() {
+  if (mode === 'connect') {
+    mode = 'drag'; connectSource = null;
+    document.querySelectorAll('.connect-source').forEach(el => el.classList.remove('connect-source'));
+    document.getElementById('btnConnect').classList.remove('active');
+    document.getElementById('btnDelete').classList.remove('active');
+    hideMode();
+  } else {
+    mode = 'connect';
+    document.getElementById('btnConnect').classList.add('active');
+    document.getElementById('btnDelete').classList.remove('active');
+    showMode('화살표 연결 모드 — 시작 블록을 클릭하세요');
+  }
+}
+
+function toggleDeleteMode() {
+  if (mode === 'delete') {
+    mode = 'drag';
+    document.getElementById('btnDelete').classList.remove('active');
+    document.getElementById('btnConnect').classList.remove('active');
+    hideMode();
+  } else {
+    mode = 'delete'; connectSource = null;
+    document.querySelectorAll('.connect-source').forEach(el => el.classList.remove('connect-source'));
+    document.getElementById('btnDelete').classList.add('active');
+    document.getElementById('btnConnect').classList.remove('active');
+    showMode('화살표 삭제 모드 — 삭제할 화살표를 클릭하세요');
+  }
+}
+
+function showMode(text) { modeIndicator.textContent = text; modeIndicator.classList.add('show'); }
+function hideMode() { modeIndicator.classList.remove('show'); }
+
+// Mermaid 내보내기
+function exportMermaid() {
+  let mmd = 'flowchart TD\n';
+  blocksData.forEach(b => {
+    const label = b.desc ? `${b.label} — ${b.desc}` : b.label;
+    if (b.major) {
+      mmd += `    ${b.id}["<b>${label}</b>"]\n`;
+    } else {
+      mmd += `    ${b.id}["${label}"]\n`;
+    }
+  });
+  mmd += '\n';
+  arrowsData.forEach(a => {
+    if (a.label) {
+      mmd += `    ${a.from} -->|"${a.label}"| ${a.to}\n`;
+    } else {
+      mmd += `    ${a.from} --> ${a.to}\n`;
+    }
+  });
+  mmd += '\n';
+  blocksData.forEach(b => {
+    if (b.major) {
+      mmd += `    style ${b.id} fill:#FFF4ED,stroke:#F25C05,stroke-width:2px,color:#0F172A\n`;
+    } else {
+      mmd += `    style ${b.id} fill:#FFFFFF,stroke:#E2E8F0,color:#334155\n`;
+    }
+  });
+
+  navigator.clipboard.writeText(mmd).then(() => {
+    showToast('Mermaid 코드 복사 완료! 노션 /mermaid 블록에 붙여넣기하세요');
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = mmd;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('Mermaid 코드 복사 완료!');
+  });
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    mode = 'drag'; connectSource = null;
+    document.querySelectorAll('.connect-source').forEach(el => el.classList.remove('connect-source'));
+    document.getElementById('btnConnect').classList.remove('active');
+    document.getElementById('btnDelete').classList.remove('active');
+    hideMode();
+  }
+});
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+renderAllBlocks();
+renderArrows();
+</script>
+
+
+</body></html>
