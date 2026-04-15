@@ -1,22 +1,22 @@
 <!DOCTYPE html>
-<!-- saved from url=(0085)file:///Users/hyphens/Documents/Claude/Projects/CA%20dashboard/ax-priority-board.html -->
-<html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AX 우선순위 보드</title>
-<link href="./AX 우선순위 보드_files/css2" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: 'Inter', -apple-system, sans-serif;
-    background: #F1F5F9;
+    background: #F8F9FB;
     min-height: 100vh;
     overflow: hidden;
   }
 
   .header {
     background: linear-gradient(90deg, #F25C05 0%, #FE9A00 100%);
-    padding: 14px 24px;
+    padding: 12px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -24,178 +24,166 @@
     position: relative;
   }
   .header h1 { font-size: 16px; font-weight: 900; color: #FFF; }
-  .header .hint { font-size: 12px; color: rgba(255,255,255,0.8); }
+  .header .hint { font-size: 11px; color: rgba(255,255,255,0.8); }
   .header-actions { display: flex; gap: 8px; }
   .header-btn {
-    padding: 8px 14px;
+    padding: 7px 14px;
     border: none;
     border-radius: 8px;
     font-family: inherit;
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
-    transition: transform 0.15s;
   }
-  .header-btn:hover { transform: translateY(-1px); }
   .header-btn.primary { background: #FFF; color: #F25C05; }
   .header-btn.secondary { background: rgba(255,255,255,0.2); color: #FFF; }
   .header-btn.danger { background: rgba(255,80,80,0.3); color: #FFF; }
   .header-btn.active { outline: 2px solid #FFF; outline-offset: 2px; }
 
   .mode-indicator {
-    position: fixed;
-    top: 60px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #0F172A;
-    color: #FFF;
-    padding: 8px 20px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 700;
-    z-index: 200;
-    display: none;
-    animation: fadeIn 0.2s;
+    position: fixed; top: 56px; left: 50%; transform: translateX(-50%);
+    background: #0F172A; color: #FFF; padding: 8px 20px; border-radius: 20px;
+    font-size: 13px; font-weight: 700; z-index: 200; display: none;
   }
   .mode-indicator.show { display: block; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
   .board {
     position: relative;
     width: 100vw;
-    height: calc(100vh - 52px);
+    height: calc(100vh - 48px);
     overflow: auto;
   }
 
   .arrow-layer {
-    position: absolute;
-    top: 0; left: 0;
-    width: 4000px; height: 3000px;
-    pointer-events: none;
-    z-index: 1;
+    position: absolute; top: 0; left: 0;
+    width: 5000px; height: 4000px;
+    pointer-events: none; z-index: 1;
   }
-  .arrow-layer path {
-    pointer-events: stroke;
-    cursor: pointer;
-  }
+  .arrow-layer path { pointer-events: stroke; cursor: pointer; }
 
-  /* 블록 */
+  /* 블록 공통 */
   .block {
     position: absolute;
-    background: #FFF;
-    border: 2px solid #E2E8F0;
-    border-radius: 14px;
-    padding: 14px 18px;
+    border-radius: 12px;
+    padding: 12px 16px;
     cursor: grab;
     z-index: 10;
-    min-width: 140px;
-    max-width: 320px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    transition: box-shadow 0.2s, border-color 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     user-select: none;
+    white-space: nowrap;
   }
   .block:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
-  .block.dragging { cursor: grabbing; box-shadow: 0 12px 32px rgba(0,0,0,0.18); z-index: 50; opacity: 0.9; }
+  .block.dragging { cursor: grabbing; box-shadow: 0 12px 32px rgba(0,0,0,0.18); z-index: 50; opacity: 0.92; }
+
+  /* 주요 블록 */
   .block.major {
     background: #FFF4ED;
-    border-color: #F25C05;
+    border: 2px solid #F25C05;
   }
-  .block .block-label {
-    font-size: 13px;
-    font-weight: 800;
-    color: #0F172A;
-    line-height: 1.4;
-    outline: none;
+  .block.major .block-label { font-size: 14px; font-weight: 800; color: #D4500A; }
+  .block.major .block-desc { font-size: 11px; color: #9A6840; margin-top: 2px; }
+
+  /* 하위 블록 */
+  .block.minor {
+    background: #FFFFFF;
+    border: 1.5px solid #D8DCE2;
   }
-  .block.major .block-label { color: #F25C05; }
-  .block .block-desc {
-    font-size: 11px;
-    color: #64748B;
-    margin-top: 4px;
-    line-height: 1.4;
-    outline: none;
-  }
+  .block.minor .block-label { font-size: 13px; font-weight: 600; color: #334155; }
+  .block.minor .block-desc { font-size: 11px; color: #64748B; margin-top: 2px; }
+
+  .block .block-label, .block .block-desc { outline: none; line-height: 1.4; }
   .block .block-label[contenteditable="true"],
   .block .block-desc[contenteditable="true"] {
-    background: rgba(242,92,5,0.08);
-    border-radius: 4px;
-    padding: 2px 4px;
-    cursor: text;
+    background: rgba(242,92,5,0.08); border-radius: 3px; padding: 1px 4px; cursor: text;
   }
 
   .block.connect-source { border-color: #22C55E; box-shadow: 0 0 0 3px rgba(34,197,94,0.3); }
 
-  /* 블록 삭제 버튼 */
   .block-delete {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    width: 20px;
-    height: 20px;
-    background: #EF4444;
-    color: #FFF;
-    border: none;
-    border-radius: 50%;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 12;
-    line-height: 1;
+    position: absolute; top: -8px; right: -8px;
+    width: 20px; height: 20px; background: #EF4444; color: #FFF;
+    border: none; border-radius: 50%; font-size: 12px; font-weight: 700;
+    cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 12;
   }
   .block:hover .block-delete { display: flex; }
 
-  /* 화살표 라벨 */
+  /* 댓글 아이콘 */
+  .block-comment-btn {
+    position: absolute; bottom: -8px; right: -8px;
+    width: 22px; height: 22px; background: #F25C05; color: #FFF;
+    border: 2px solid #FFF; border-radius: 50%; font-size: 11px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 12;
+    font-weight: 700;
+  }
+  .block-comment-btn.has-comments { background: #22C55E; }
+
+  /* 댓글 패널 */
+  .comment-panel {
+    position: fixed; top: 0; right: -380px; width: 380px; height: 100vh;
+    background: #FFF; border-left: 2px solid #E2E8F0; z-index: 300;
+    display: flex; flex-direction: column;
+    transition: right 0.3s ease;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.08);
+  }
+  .comment-panel.open { right: 0; }
+  .comment-panel-header {
+    padding: 16px 20px; border-bottom: 1px solid #E2E8F0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .comment-panel-header h3 { font-size: 14px; font-weight: 800; color: #0F172A; }
+  .comment-panel-close {
+    background: none; border: none; font-size: 20px; cursor: pointer; color: #94A3B8;
+  }
+  .comment-list {
+    flex: 1; overflow-y: auto; padding: 16px 20px;
+  }
+  .comment-item {
+    background: #F8FAFC; border-radius: 10px; padding: 12px; margin-bottom: 10px;
+  }
+  .comment-item .comment-author {
+    font-size: 12px; font-weight: 700; color: #F25C05; margin-bottom: 4px;
+  }
+  .comment-item .comment-text { font-size: 13px; color: #334155; line-height: 1.5; }
+  .comment-item .comment-time { font-size: 10px; color: #94A3B8; margin-top: 4px; }
+  .comment-input-area {
+    padding: 16px 20px; border-top: 1px solid #E2E8F0;
+  }
+  .comment-input-area input[type="text"] {
+    width: 100%; padding: 10px 12px; border: 2px solid #E2E8F0; border-radius: 10px;
+    font-family: inherit; font-size: 13px; margin-bottom: 8px;
+  }
+  .comment-input-area input:focus { outline: none; border-color: #F25C05; }
+  .comment-input-area textarea {
+    width: 100%; padding: 10px 12px; border: 2px solid #E2E8F0; border-radius: 10px;
+    font-family: inherit; font-size: 13px; resize: vertical; min-height: 60px;
+  }
+  .comment-input-area textarea:focus { outline: none; border-color: #F25C05; }
+  .comment-submit {
+    margin-top: 8px; width: 100%; padding: 10px;
+    background: linear-gradient(90deg, #F25C05, #FE9A00); color: #FFF;
+    border: none; border-radius: 10px; font-family: inherit;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+
   .arrow-label {
-    position: absolute;
-    background: #FFF;
-    border: 1px solid #E2E8F0;
-    border-radius: 6px;
-    padding: 2px 8px;
-    font-size: 10px;
-    font-weight: 600;
-    color: #64748B;
-    z-index: 5;
-    pointer-events: none;
-    white-space: nowrap;
+    position: absolute; background: #F8F9FB; border: 1px solid #D8DCE2; border-radius: 4px;
+    padding: 1px 7px; font-size: 10px; font-weight: 600; color: #64748B;
+    z-index: 5; pointer-events: none; white-space: nowrap;
   }
 
   .toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
+    position: fixed; bottom: 24px; left: 50%;
     transform: translateX(-50%) translateY(80px);
-    background: #0F172A;
-    color: #FFF;
-    padding: 12px 24px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 700;
-    opacity: 0;
-    transition: all 0.3s ease;
-    z-index: 300;
+    background: #0F172A; color: #FFF; padding: 12px 24px; border-radius: 10px;
+    font-size: 13px; font-weight: 700; opacity: 0; transition: all 0.3s ease; z-index: 400;
   }
-  .toast.show {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
   .help-panel {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: #FFF;
-    border: 2px solid #E2E8F0;
-    border-radius: 12px;
-    padding: 16px;
-    font-size: 12px;
-    color: #64748B;
-    line-height: 1.8;
-    z-index: 100;
-    max-width: 260px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    position: fixed; bottom: 16px; right: 16px; background: #FFF;
+    border: 1.5px solid #E2E8F0; border-radius: 10px; padding: 14px;
+    font-size: 11px; color: #64748B; line-height: 1.8; z-index: 100;
+    max-width: 240px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   }
   .help-panel b { color: #0F172A; }
 </style>
@@ -205,10 +193,11 @@
 <div class="header">
   <div>
     <h1>AX 우선순위 보드</h1>
-    <div class="hint">블록을 드래그해서 배치하고, 화살표로 연결하세요</div>
+    <div class="hint">드래그로 배치 · 더블클릭으로 편집 · 💬으로 의견 남기기</div>
   </div>
   <div class="header-actions">
-    <button class="header-btn secondary" id="btnAdd" onclick="addBlock()">+ 블록 추가</button>
+    <button class="header-btn secondary" onclick="addBlock(false)">+ 하위 블록</button>
+    <button class="header-btn secondary" onclick="addBlock(true)">+ 주요 블록</button>
     <button class="header-btn secondary" id="btnConnect" onclick="toggleConnectMode()">화살표 연결</button>
     <button class="header-btn danger" id="btnDelete" onclick="toggleDeleteMode()">화살표 삭제</button>
     <button class="header-btn primary" onclick="exportMermaid()">Mermaid 복사</button>
@@ -220,206 +209,125 @@
 <div class="board" id="board">
   <svg class="arrow-layer" id="arrowLayer">
     <defs>
-      <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-        <polygon points="0 0, 8 3, 0 6" fill="#94A3B8"></polygon>
-      </marker>
-      <marker id="arrowhead-red" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-        <polygon points="0 0, 8 3, 0 6" fill="#EF4444"></polygon>
-      </marker>
+      <marker id="ah" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#B0B8C4"/></marker>
+      <marker id="ah-r" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#EF4444"/></marker>
     </defs>
-  <path d="M 495 100 L 495 115 L 270 115 L 270 130" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="0"></path><path d="M 270 200 L 270 215 L 158 215 L 158 230" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="1"></path><path d="M 270 200 L 270 215 L 370 215 L 370 230" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="2"></path><path d="M 495 100 L 495 115 L 792 115 L 792 130" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="3"></path><path d="M 792 200 L 792 225 L 593.5 225 L 593.5 250" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="4"></path><path d="M 792 200 L 792 225 L 801.5 225 L 801.5 250" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="5"></path><path d="M 792 200 L 792 265 L 592 265 L 592 330" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="6"></path><path d="M 792 200 L 792 265 L 820 265 L 820 330" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="7"></path><path d="M 792 200 L 792 265 L 1040 265 L 1040 330" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="8"></path><path d="M 820 380 L 820 410 L 903 410 L 903 440" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="9"></path><path d="M 1040 380 L 1040 410 L 903 410 L 903 440" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="10"></path><path d="M 903 510 L 903 535 L 684.5 535 L 684.5 560" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="11"></path><path d="M 903 510 L 903 535 L 1112 535 L 1112 560" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="12"></path><path d="M 684.5 630 L 684.5 645 L 675.5 645 L 675.5 660" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="13"></path><path d="M 675.5 710 L 675.5 730 L 670 730 L 670 750" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="14"></path><path d="M 592 380 L 592 625 L 598 625 L 598 870" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="15"></path><path d="M 1112 630 L 1112 750 L 598 750 L 598 870" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="16"></path><path d="M 598 940 L 598 955 L 470 955 L 470 970" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="17"></path><path d="M 540 995 L 560 995" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="18"></path><path d="M 700 995 L 700 995" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="19"></path><path d="M 770 970 L 770 635 L 801.5 635 L 801.5 300" stroke="#94A3B8" stroke-width="2" fill="none" marker-end="url(#arrowhead)" data-idx="20"></path></svg>
-<div class="block major" id="block-A" style="left: 420px; top: 30px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;A&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">ⅰ. 상위 목표 설정</div>
-    <div class="block-desc">달성하려는 임팩트가 뭔지</div>
-  </div><div class="block " id="block-A1" style="left: 200px; top: 130px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;A1&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">하위 목표 설정</div>
-    <div class="block-desc">예: 수동 리소스 절감</div>
-  </div><div class="block " id="block-A2" style="left: 80px; top: 230px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;A2&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">As-Is 수치 산출 + 싱크</div>
-    <div class="block-desc" style="display:none"></div>
-  </div><div class="block " id="block-A3" style="left: 300px; top: 230px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;A3&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">To-Be 기준선 합의</div>
-    <div class="block-desc" style="display:none"></div>
-  </div><div class="block major" id="block-B" style="left: 700px; top: 130px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;B&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">ⅱ. 여태까지 한 것 중간 정리</div>
-    <div class="block-desc">+ 앞으로의 공유 체계 수립</div>
-  </div><div class="block " id="block-B1" style="left: 500px; top: 250px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;B1&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">BizOps 진행 현황 한 판 정리</div>
-    <div class="block-desc" style="display:none"></div>
-  </div><div class="block " id="block-B3" style="left: 720px; top: 250px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;B3&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">방향성 맞는지 확인·소통</div>
-    <div class="block-desc" style="display:none"></div>
-  </div><div class="block " id="block-B4" style="left: 500px; top: 330px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;B4&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">BizOps 추가 진행 영역 발굴</div>
-    <div class="block-desc" style="display:none"></div>
-  </div><div class="block " id="block-B5" style="left: 750px; top: 330px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;B5&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">성공 사례 문서화</div>
-    <div class="block-desc" style="display:none"></div>
-  </div><div class="block " id="block-B6" style="left: 970px; top: 330px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;B6&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">사용 도구 현황 파악</div>
-    <div class="block-desc" style="display:none"></div>
-  </div><div class="block major" id="block-C" style="left: 820px; top: 440px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;C&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">ⅲ. 표준 워크플로우 정의</div>
-    <div class="block-desc">복제 가능한 매뉴얼 만들기</div>
-  </div><div class="block major" id="block-D" style="left: 600px; top: 560px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;D&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">ⅳ. 총괄 어드민 체계 구성</div>
-    <div class="block-desc">언어·데이터·배포 통합 관리</div>
-  </div><div class="block " id="block-D1" style="left: 600px; top: 660px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;D1&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">데이터 정의 및 마이그</div>
-    <div class="block-desc" style="display:none"></div>
-  </div><div class="block " id="block-D2" style="left: 600px; top: 750px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;D2&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">총괄 어드민 완성</div>
-    <div class="block-desc" style="display:none"></div>
-  </div><div class="block major" id="block-E" style="left: 1020px; top: 560px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;E&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">ⅴ. 신규 영역 발굴 (CA, CX)</div>
-    <div class="block-desc">자동화 대상 식별</div>
-  </div><div class="block major" id="block-F" style="left: 500px; top: 870px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;F&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">ⅵ. 담당자 할당→플래닝→착수</div>
-    <div class="block-desc">공통 실행 사이클</div>
-  </div><div class="block " id="block-F1" style="left: 400px; top: 970px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;F1&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">담당자 할당</div>
-    <div class="block-desc" style="display:none"></div>
-  </div><div class="block " id="block-F2" style="left: 560px; top: 970px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;F2&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">플래닝</div>
-    <div class="block-desc" style="display:none"></div>
-  </div><div class="block " id="block-F3" style="left: 700px; top: 970px;">
-    <button class="block-delete" onclick="deleteBlock(&#39;F3&#39;)" title="블록 삭제">×</button>
-    <div class="block-label">착수 + 실행</div>
-    <div class="block-desc" style="display:none"></div>
-  </div><div class="arrow-label" style="left: 967.5px; top: 525px;">선행되면 도움될 것</div><div class="arrow-label" style="left: 555px; top: 615px;">BizOps 추가분</div><div class="arrow-label" style="left: 815px; top: 740px;">CA/CX 신규분</div><div class="arrow-label" style="left: 745.75px; top: 625px;">결과를 다시 공유</div></div>
+  </svg>
+</div>
+
+<!-- 댓글 패널 -->
+<div class="comment-panel" id="commentPanel">
+  <div class="comment-panel-header">
+    <h3 id="commentPanelTitle">댓글</h3>
+    <button class="comment-panel-close" onclick="closeComments()">×</button>
+  </div>
+  <div class="comment-list" id="commentList"></div>
+  <div class="comment-input-area">
+    <input type="text" id="commentAuthor" placeholder="이름 (예: Hannah)">
+    <textarea id="commentText" placeholder="의견을 남겨주세요..."></textarea>
+    <button class="comment-submit" onclick="submitComment()">의견 남기기</button>
+  </div>
+</div>
 
 <div class="help-panel">
   <b>드래그</b> — 블록 이동<br>
   <b>더블클릭</b> — 텍스트 편집<br>
-  <b>+ 블록 추가</b> — 새 블록 생성<br>
-  <b>화살표 연결</b> — 블록 두 개 순서대로 클릭<br>
-  <b>화살표 삭제</b> — 화살표 클릭하면 삭제<br>
-  <b>Mermaid 복사</b> — 노션 붙여넣기용<br>
-  <b>ESC</b> — 드래그 모드로 복귀
+  <b>💬</b> — 블록에 의견 남기기<br>
+  <b>화살표 연결</b> — 블록 두 개 클릭<br>
+  <b>화살표 삭제</b> — 화살표 클릭<br>
+  <b>ESC</b> — 드래그 모드 복귀
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// 블록 데이터
+// 이미지 기준 정확한 초기 레이아웃
 const blocksData = [
-  { id: 'A', label: 'ⅰ. 상위 목표 설정', desc: '달성하려는 임팩트가 뭔지', major: true, x: 420, y: 30 },
-  { id: 'A1', label: '하위 목표 설정', desc: '예: 수동 리소스 절감', major: false, x: 200, y: 130 },
-  { id: 'A2', label: 'As-Is 수치 산출 + 싱크', desc: '', major: false, x: 80, y: 230 },
-  { id: 'A3', label: 'To-Be 기준선 합의', desc: '', major: false, x: 300, y: 230 },
-
-  { id: 'B', label: 'ⅱ. 여태까지 한 것 중간 정리', desc: '+ 앞으로의 공유 체계 수립', major: true, x: 700, y: 130 },
-  { id: 'B1', label: 'BizOps 진행 현황 한 판 정리', desc: '', major: false, x: 500, y: 250 },
-  { id: 'B3', label: '방향성 맞는지 확인·소통', desc: '', major: false, x: 720, y: 250 },
-  { id: 'B4', label: 'BizOps 추가 진행 영역 발굴', desc: '', major: false, x: 500, y: 330 },
-  { id: 'B5', label: '성공 사례 문서화', desc: '', major: false, x: 750, y: 330 },
-  { id: 'B6', label: '사용 도구 현황 파악', desc: '', major: false, x: 970, y: 330 },
-
-  { id: 'C', label: 'ⅲ. 표준 워크플로우 정의', desc: '복제 가능한 매뉴얼 만들기', major: true, x: 820, y: 440 },
-  { id: 'D', label: 'ⅳ. 총괄 어드민 체계 구성', desc: '언어·데이터·배포 통합 관리', major: true, x: 600, y: 560 },
-  { id: 'D1', label: '데이터 정의 및 마이그', desc: '', major: false, x: 600, y: 660 },
-  { id: 'D2', label: '총괄 어드민 완성', desc: '', major: false, x: 600, y: 750 },
-
-  { id: 'E', label: 'ⅴ. 신규 영역 발굴 (CA, CX)', desc: '자동화 대상 식별', major: true, x: 1020, y: 560 },
-
-  { id: 'F', label: 'ⅵ. 담당자 할당→플래닝→착수', desc: '공통 실행 사이클', major: true, x: 500, y: 870 },
-  { id: 'F1', label: '담당자 할당', desc: '', major: false, x: 400, y: 970 },
-  { id: 'F2', label: '플래닝', desc: '', major: false, x: 560, y: 970 },
-  { id: 'F3', label: '착수 + 실행', desc: '', major: false, x: 700, y: 970 },
+  { id:'A', label:'ⅰ. 상위 목표 설정', desc:'— 달성하려는 임팩트가 뭔지', major:true, x:380, y:30 },
+  { id:'A1', label:'하위 목표 설정', desc:'(예시: 수동 리소스 절감)', major:false, x:180, y:120 },
+  { id:'A2', label:'As-Is 수치 산출 + 싱크', desc:'', major:false, x:30, y:220 },
+  { id:'A3', label:'To-Be 기준선 합의', desc:'', major:false, x:230, y:220 },
+  { id:'B', label:'ⅱ. 여태까지 한 것 중간 정리', desc:'+ 앞으로의 공유 체계 수립', major:true, x:650, y:120 },
+  { id:'B1', label:'BizOps 진행 현황 한 판 정리', desc:'', major:false, x:420, y:220 },
+  { id:'B4', label:'BizOps 추가 진행 영역 발굴', desc:'', major:false, x:610, y:220 },
+  { id:'B5', label:'성공 사례 문서화', desc:'', major:false, x:810, y:220 },
+  { id:'B6', label:'사용 도구 현황 파악', desc:'', major:false, x:980, y:220 },
+  { id:'C', label:'ⅲ. 표준 워크플로우 정의', desc:'— 복제 가능한 매뉴얼 만들기', major:true, x:780, y:330 },
+  { id:'D', label:'ⅳ. 총괄 어드민 체계 구성', desc:'— 언어·데이터·배포 통합 관리', major:true, x:560, y:440 },
+  { id:'D1', label:'데이터 정의 및 마이그', desc:'', major:false, x:560, y:540 },
+  { id:'D2', label:'총괄 어드민 완성', desc:'', major:false, x:560, y:620 },
+  { id:'E', label:'ⅴ. 신규 영역 발굴 (CA, CX)', desc:'— 자동화 대상 식별', major:true, x:920, y:440 },
+  { id:'F', label:'ⅵ. 담당자 할당→플래닝→착수', desc:'(공통 실행 사이클)', major:true, x:520, y:730 },
+  { id:'F1', label:'담당자 할당', desc:'', major:false, x:440, y:830 },
+  { id:'F2', label:'플래닝', desc:'', major:false, x:580, y:830 },
+  { id:'F3', label:'착수 + 실행', desc:'', major:false, x:700, y:830 },
+  { id:'B3', label:'방향성 맞는지 확인·소통', desc:'', major:false, x:900, y:900 },
 ];
 
 let arrowsData = [
-  { from: 'A', to: 'A1' },
-  { from: 'A1', to: 'A2' },
-  { from: 'A1', to: 'A3' },
-  { from: 'A', to: 'B' },
-  { from: 'B', to: 'B1' },
-  { from: 'B', to: 'B3' },
-  { from: 'B', to: 'B4' },
-  { from: 'B', to: 'B5' },
-  { from: 'B', to: 'B6' },
-  { from: 'B5', to: 'C' },
-  { from: 'B6', to: 'C' },
-  { from: 'C', to: 'D' },
-  { from: 'C', to: 'E', label: '선행되면 도움될 것' },
-  { from: 'D', to: 'D1' },
-  { from: 'D1', to: 'D2' },
-  { from: 'B4', to: 'F', label: 'BizOps 추가분' },
-  { from: 'E', to: 'F', label: 'CA/CX 신규분' },
-  { from: 'F', to: 'F1' },
-  { from: 'F1', to: 'F2' },
-  { from: 'F2', to: 'F3' },
-  { from: 'F3', to: 'B3', label: '결과를 다시 공유' },
+  { from:'A', to:'A1' }, { from:'A', to:'B' },
+  { from:'A1', to:'A2' }, { from:'A1', to:'A3' },
+  { from:'B', to:'B1' }, { from:'B', to:'B4' }, { from:'B', to:'B5' }, { from:'B', to:'B6' },
+  { from:'B5', to:'C' }, { from:'B6', to:'C' },
+  { from:'C', to:'D' },
+  { from:'C', to:'E', label:'선행되면 도움될 것' },
+  { from:'D', to:'D1' }, { from:'D1', to:'D2' },
+  { from:'B4', to:'F', label:'BizOps 추가분' },
+  { from:'E', to:'F', label:'CA/CX 신규분' },
+  { from:'F', to:'F1' }, { from:'F1', to:'F2' }, { from:'F2', to:'F3' },
+  { from:'F3', to:'B3', label:'결과를 다시 공유' },
 ];
+
+// 댓글 데이터 (메모리 저장)
+let commentsData = {};
+let currentCommentBlock = null;
 
 let mode = 'drag';
 let connectSource = null;
 let dragState = null;
-let blockCounter = 100;
+let blockCounter = 200;
 
 const board = document.getElementById('board');
 const arrowLayer = document.getElementById('arrowLayer');
-const modeIndicator = document.getElementById('modeIndicator');
 
-// 블록 렌더링
 function renderBlock(b) {
   const div = document.createElement('div');
-  div.className = `block ${b.major ? 'major' : ''}`;
+  div.className = `block ${b.major ? 'major' : 'minor'}`;
   div.id = `block-${b.id}`;
   div.style.left = b.x + 'px';
   div.style.top = b.y + 'px';
+
+  const hasDesc = b.desc && b.desc.trim();
   div.innerHTML = `
-    <button class="block-delete" onclick="deleteBlock('${b.id}')" title="블록 삭제">×</button>
+    <button class="block-delete" onclick="deleteBlock('${b.id}')" title="삭제">×</button>
+    <div class="block-comment-btn" onclick="openComments('${b.id}')" title="의견 남기기">💬</div>
     <div class="block-label">${b.label}</div>
-    ${b.desc ? `<div class="block-desc">${b.desc}</div>` : `<div class="block-desc" style="display:none"></div>`}
+    ${hasDesc ? `<div class="block-desc">${b.desc}</div>` : `<div class="block-desc" style="display:none"></div>`}
   `;
 
-  div.addEventListener('mousedown', (e) => onBlockMouseDown(e, b));
+  div.addEventListener('mousedown', (e) => onMouseDown(e, b));
   div.addEventListener('click', (e) => onBlockClick(e, b));
-
-  // 더블클릭 → 텍스트 편집
   div.addEventListener('dblclick', (e) => {
     e.stopPropagation();
-    const labelEl = div.querySelector('.block-label');
-    const descEl = div.querySelector('.block-desc');
-    labelEl.contentEditable = 'true';
-    descEl.style.display = 'block';
-    descEl.contentEditable = 'true';
-    labelEl.focus();
-
-    // 편집 종료 처리
-    const finishEdit = () => {
-      labelEl.contentEditable = 'false';
-      descEl.contentEditable = 'false';
-      b.label = labelEl.textContent.trim();
-      b.desc = descEl.textContent.trim();
-      if (!b.desc) descEl.style.display = 'none';
+    const lbl = div.querySelector('.block-label');
+    const dsc = div.querySelector('.block-desc');
+    lbl.contentEditable = 'true';
+    dsc.style.display = 'block';
+    dsc.contentEditable = 'true';
+    lbl.focus();
+    const done = () => {
+      lbl.contentEditable = 'false';
+      dsc.contentEditable = 'false';
+      b.label = lbl.textContent.trim();
+      b.desc = dsc.textContent.trim();
+      if (!b.desc) dsc.style.display = 'none';
     };
-    labelEl.addEventListener('blur', finishEdit, { once: true });
-    descEl.addEventListener('blur', () => {
-      setTimeout(finishEdit, 100);
-    }, { once: true });
+    lbl.addEventListener('blur', () => setTimeout(done, 150), { once: true });
+    dsc.addEventListener('blur', () => setTimeout(done, 150), { once: true });
   });
 
   board.appendChild(div);
+  updateCommentBadge(b.id);
 }
 
 function renderAllBlocks() {
@@ -427,42 +335,29 @@ function renderAllBlocks() {
   blocksData.forEach(b => renderBlock(b));
 }
 
-// 블록 추가
-function addBlock() {
+function addBlock(major) {
   blockCounter++;
   const id = 'N' + blockCounter;
-  const scrollX = board.scrollLeft;
-  const scrollY = board.scrollTop;
-  const newBlock = {
-    id,
-    label: '새 블록',
-    desc: '더블클릭으로 편집',
-    major: false,
-    x: 200 + scrollX,
-    y: 200 + scrollY,
-  };
-  blocksData.push(newBlock);
-  renderBlock(newBlock);
-  showToast('새 블록이 추가되었습니다. 더블클릭하여 편집하세요.');
+  const newB = { id, label: '새 블록', desc: '더블클릭으로 편집', major, x: 200 + board.scrollLeft, y: 150 + board.scrollTop };
+  blocksData.push(newB);
+  renderBlock(newB);
+  showToast('블록 추가됨 — 더블클릭으로 편집하세요');
 }
 
-// 블록 삭제
 function deleteBlock(id) {
   const idx = blocksData.findIndex(b => b.id === id);
   if (idx === -1) return;
   blocksData.splice(idx, 1);
-  // 연결된 화살표도 삭제
   arrowsData = arrowsData.filter(a => a.from !== id && a.to !== id);
   const el = document.getElementById(`block-${id}`);
   if (el) el.remove();
+  delete commentsData[id];
   renderArrows();
-  showToast('블록이 삭제되었습니다');
 }
 
-// 드래그
-function onBlockMouseDown(e, block) {
+function onMouseDown(e, block) {
   if (mode !== 'drag') return;
-  if (e.target.contentEditable === 'true' || e.target.classList.contains('block-delete')) return;
+  if (e.target.contentEditable === 'true' || e.target.closest('.block-delete') || e.target.closest('.block-comment-btn')) return;
   e.preventDefault();
   const div = document.getElementById(`block-${block.id}`);
   const rect = div.getBoundingClientRect();
@@ -473,278 +368,204 @@ function onBlockMouseDown(e, block) {
 document.addEventListener('mousemove', (e) => {
   if (!dragState) return;
   const { block, div, offsetX, offsetY } = dragState;
-  const boardRect = board.getBoundingClientRect();
-  block.x = Math.max(0, e.clientX - boardRect.left + board.scrollLeft - offsetX);
-  block.y = Math.max(0, e.clientY - boardRect.top + board.scrollTop - offsetY);
+  const br = board.getBoundingClientRect();
+  block.x = Math.max(0, e.clientX - br.left + board.scrollLeft - offsetX);
+  block.y = Math.max(0, e.clientY - br.top + board.scrollTop - offsetY);
   div.style.left = block.x + 'px';
   div.style.top = block.y + 'px';
   renderArrows();
 });
 
 document.addEventListener('mouseup', () => {
-  if (dragState) {
-    dragState.div.classList.remove('dragging');
-    dragState = null;
-  }
+  if (dragState) { dragState.div.classList.remove('dragging'); dragState = null; }
 });
 
-// 블록 클릭 (연결 모드)
 function onBlockClick(e, block) {
-  if (mode === 'connect') {
-    e.stopPropagation();
-    if (!connectSource) {
-      connectSource = block;
-      document.getElementById(`block-${block.id}`).classList.add('connect-source');
-      showMode('두 번째 블록을 클릭하세요 (→ 방향)');
-    } else {
-      if (connectSource.id !== block.id) {
-        const exists = arrowsData.some(a => a.from === connectSource.id && a.to === block.id);
-        if (!exists) {
-          arrowsData.push({ from: connectSource.id, to: block.id });
-          renderArrows();
-          showToast(`${connectSource.label} → ${block.label} 연결됨`);
-        }
-      }
-      document.querySelectorAll('.connect-source').forEach(el => el.classList.remove('connect-source'));
-      connectSource = null;
-      showMode('화살표 연결 모드 — 시작 블록을 클릭하세요');
-    }
-  }
-}
-
-// 직각 화살표 경로 계산
-function getOrthogonalPath(fromRect, toRect) {
-  const fromCX = fromRect.x + fromRect.w / 2;
-  const fromCY = fromRect.y + fromRect.h / 2;
-  const toCX = toRect.x + toRect.w / 2;
-  const toCY = toRect.y + toRect.h / 2;
-
-  let startX, startY, endX, endY;
-  const gap = 20;
-
-  // 세로 방향 판단: from이 위에 있으면 아래→위, 아니면 좌우
-  const dy = toCY - fromCY;
-  const dx = toCX - fromCX;
-
-  if (Math.abs(dy) > Math.abs(dx) * 0.3) {
-    // 주로 세로 이동
-    if (dy > 0) {
-      // from 아래 → to 위
-      startX = fromCX;
-      startY = fromRect.y + fromRect.h;
-      endX = toCX;
-      endY = toRect.y;
-    } else {
-      // from 위 → to 아래
-      startX = fromCX;
-      startY = fromRect.y;
-      endX = toCX;
-      endY = toRect.y + toRect.h;
-    }
-
-    const midY = (startY + endY) / 2;
-
-    if (Math.abs(startX - endX) < 5) {
-      // 거의 일직선 — 직선
-      return {
-        path: `M ${startX} ${startY} L ${endX} ${endY}`,
-        midX: (startX + endX) / 2,
-        midY: midY
-      };
-    } else {
-      // 직각 꺾기: 아래로 → 가로 → 아래로
-      return {
-        path: `M ${startX} ${startY} L ${startX} ${midY} L ${endX} ${midY} L ${endX} ${endY}`,
-        midX: (startX + endX) / 2,
-        midY: midY
-      };
-    }
+  if (mode !== 'connect') return;
+  e.stopPropagation();
+  if (!connectSource) {
+    connectSource = block;
+    document.getElementById(`block-${block.id}`).classList.add('connect-source');
+    showMode('두 번째 블록을 클릭하세요');
   } else {
-    // 주로 가로 이동
-    if (dx > 0) {
-      startX = fromRect.x + fromRect.w;
-      startY = fromCY;
-      endX = toRect.x;
-      endY = toCY;
-    } else {
-      startX = fromRect.x;
-      startY = fromCY;
-      endX = toRect.x + toRect.w;
-      endY = toCY;
+    if (connectSource.id !== block.id) {
+      if (!arrowsData.some(a => a.from === connectSource.id && a.to === block.id)) {
+        arrowsData.push({ from: connectSource.id, to: block.id });
+        renderArrows();
+      }
     }
-
-    const midX = (startX + endX) / 2;
-
-    if (Math.abs(startY - endY) < 5) {
-      return {
-        path: `M ${startX} ${startY} L ${endX} ${endY}`,
-        midX: midX,
-        midY: (startY + endY) / 2
-      };
-    } else {
-      return {
-        path: `M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${endY} L ${endX} ${endY}`,
-        midX: midX,
-        midY: (startY + endY) / 2
-      };
-    }
+    document.querySelectorAll('.connect-source').forEach(el => el.classList.remove('connect-source'));
+    connectSource = null;
+    showMode('화살표 연결 모드 — 시작 블록 클릭');
   }
 }
 
-// 화살표 렌더링
+// 직각 화살표
+function orthoPath(fR, tR) {
+  const fCX = fR.x + fR.w/2, fCY = fR.y + fR.h/2;
+  const tCX = tR.x + tR.w/2, tCY = tR.y + tR.h/2;
+  const dy = tCY - fCY, dx = tCX - fCX;
+  let sx, sy, ex, ey;
+
+  if (Math.abs(dy) >= Math.abs(dx) * 0.3) {
+    if (dy > 0) { sx=fCX; sy=fR.y+fR.h; ex=tCX; ey=tR.y; }
+    else { sx=fCX; sy=fR.y; ex=tCX; ey=tR.y+tR.h; }
+    const my = (sy+ey)/2;
+    if (Math.abs(sx-ex)<4) return { d:`M${sx} ${sy}L${ex} ${ey}`, mx:(sx+ex)/2, my };
+    return { d:`M${sx} ${sy}L${sx} ${my}L${ex} ${my}L${ex} ${ey}`, mx:(sx+ex)/2, my };
+  } else {
+    if (dx > 0) { sx=fR.x+fR.w; sy=fCY; ex=tR.x; ey=tCY; }
+    else { sx=fR.x; sy=fCY; ex=tR.x+tR.w; ey=tCY; }
+    const mx = (sx+ex)/2;
+    if (Math.abs(sy-ey)<4) return { d:`M${sx} ${sy}L${ex} ${ey}`, mx, my:(sy+ey)/2 };
+    return { d:`M${sx} ${sy}L${mx} ${sy}L${mx} ${ey}L${ex} ${ey}`, mx, my:(sy+ey)/2 };
+  }
+}
+
 function renderArrows() {
   arrowLayer.querySelectorAll('path').forEach(el => el.remove());
   document.querySelectorAll('.arrow-label').forEach(el => el.remove());
 
   arrowsData.forEach((arrow, idx) => {
-    const fromDiv = document.getElementById(`block-${arrow.from}`);
-    const toDiv = document.getElementById(`block-${arrow.to}`);
-    if (!fromDiv || !toDiv) return;
+    const fD = document.getElementById(`block-${arrow.from}`);
+    const tD = document.getElementById(`block-${arrow.to}`);
+    if (!fD || !tD) return;
 
-    const fromRect = { x: parseFloat(fromDiv.style.left), y: parseFloat(fromDiv.style.top), w: fromDiv.offsetWidth, h: fromDiv.offsetHeight };
-    const toRect = { x: parseFloat(toDiv.style.left), y: parseFloat(toDiv.style.top), w: toDiv.offsetWidth, h: toDiv.offsetHeight };
+    const fR = { x:parseFloat(fD.style.left), y:parseFloat(fD.style.top), w:fD.offsetWidth, h:fD.offsetHeight };
+    const tR = { x:parseFloat(tD.style.left), y:parseFloat(tD.style.top), w:tD.offsetWidth, h:tD.offsetHeight };
+    const { d, mx, my } = orthoPath(fR, tR);
 
-    const { path: d, midX, midY } = getOrthogonalPath(fromRect, toRect);
+    const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d', d);
+    p.setAttribute('stroke','#B0B8C4');
+    p.setAttribute('stroke-width','1.5');
+    p.setAttribute('fill','none');
+    p.setAttribute('marker-end','url(#ah)');
 
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', d);
-    path.setAttribute('stroke', '#94A3B8');
-    path.setAttribute('stroke-width', '2');
-    path.setAttribute('fill', 'none');
-    path.setAttribute('marker-end', 'url(#arrowhead)');
-    path.dataset.idx = idx;
+    p.addEventListener('mouseenter', () => { if (mode==='delete') { p.setAttribute('stroke','#EF4444'); p.setAttribute('stroke-width','4'); p.setAttribute('marker-end','url(#ah-r)'); }});
+    p.addEventListener('mouseleave', () => { if (mode==='delete') { p.setAttribute('stroke','#B0B8C4'); p.setAttribute('stroke-width','1.5'); p.setAttribute('marker-end','url(#ah)'); }});
+    p.addEventListener('click', (e) => { if (mode==='delete') { e.stopPropagation(); arrowsData.splice(idx,1); renderArrows(); showToast('화살표 삭제됨'); }});
 
-    path.addEventListener('mouseenter', () => {
-      if (mode === 'delete') {
-        path.setAttribute('stroke', '#EF4444');
-        path.setAttribute('stroke-width', '4');
-        path.setAttribute('marker-end', 'url(#arrowhead-red)');
-      }
-    });
-    path.addEventListener('mouseleave', () => {
-      if (mode === 'delete') {
-        path.setAttribute('stroke', '#94A3B8');
-        path.setAttribute('stroke-width', '2');
-        path.setAttribute('marker-end', 'url(#arrowhead)');
-      }
-    });
-    path.addEventListener('click', (e) => {
-      if (mode === 'delete') {
-        e.stopPropagation();
-        arrowsData.splice(idx, 1);
-        renderArrows();
-        showToast('화살표 삭제됨');
-      }
-    });
-
-    arrowLayer.appendChild(path);
+    arrowLayer.appendChild(p);
 
     if (arrow.label) {
-      const labelDiv = document.createElement('div');
-      labelDiv.className = 'arrow-label';
-      labelDiv.textContent = arrow.label;
-      labelDiv.style.left = (midX - 40) + 'px';
-      labelDiv.style.top = (midY - 10) + 'px';
-      board.appendChild(labelDiv);
+      const lb = document.createElement('div');
+      lb.className = 'arrow-label';
+      lb.textContent = arrow.label;
+      lb.style.left = (mx - 40) + 'px';
+      lb.style.top = (my - 10) + 'px';
+      board.appendChild(lb);
     }
   });
 }
 
-// 모드 전환
+// 댓글 기능
+function openComments(blockId) {
+  currentCommentBlock = blockId;
+  const b = blocksData.find(x => x.id === blockId);
+  document.getElementById('commentPanelTitle').textContent = b ? `💬 ${b.label}` : '댓글';
+  renderComments();
+  document.getElementById('commentPanel').classList.add('open');
+}
+
+function closeComments() {
+  document.getElementById('commentPanel').classList.remove('open');
+  currentCommentBlock = null;
+}
+
+function renderComments() {
+  const list = document.getElementById('commentList');
+  const comments = commentsData[currentCommentBlock] || [];
+  if (comments.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:#94A3B8;padding:40px 0;font-size:13px;">아직 의견이 없습니다</div>';
+  } else {
+    list.innerHTML = comments.map(c => `
+      <div class="comment-item">
+        <div class="comment-author">${escapeHTML(c.author)}</div>
+        <div class="comment-text">${escapeHTML(c.text)}</div>
+        <div class="comment-time">${c.time}</div>
+      </div>
+    `).join('');
+    list.scrollTop = list.scrollHeight;
+  }
+}
+
+function submitComment() {
+  if (!currentCommentBlock) return;
+  const author = document.getElementById('commentAuthor').value.trim() || '익명';
+  const text = document.getElementById('commentText').value.trim();
+  if (!text) return;
+
+  if (!commentsData[currentCommentBlock]) commentsData[currentCommentBlock] = [];
+  const now = new Date();
+  const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+  commentsData[currentCommentBlock].push({ author, text, time: timeStr });
+
+  document.getElementById('commentText').value = '';
+  renderComments();
+  updateCommentBadge(currentCommentBlock);
+  showToast('의견이 등록되었습니다');
+}
+
+function updateCommentBadge(blockId) {
+  const div = document.getElementById(`block-${blockId}`);
+  if (!div) return;
+  const btn = div.querySelector('.block-comment-btn');
+  const count = (commentsData[blockId] || []).length;
+  if (count > 0) {
+    btn.classList.add('has-comments');
+    btn.textContent = count;
+  } else {
+    btn.classList.remove('has-comments');
+    btn.textContent = '💬';
+  }
+}
+
+function escapeHTML(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
 function toggleConnectMode() {
-  if (mode === 'connect') {
-    mode = 'drag'; connectSource = null;
-    document.querySelectorAll('.connect-source').forEach(el => el.classList.remove('connect-source'));
-    document.getElementById('btnConnect').classList.remove('active');
-    document.getElementById('btnDelete').classList.remove('active');
-    hideMode();
-  } else {
-    mode = 'connect';
-    document.getElementById('btnConnect').classList.add('active');
-    document.getElementById('btnDelete').classList.remove('active');
-    showMode('화살표 연결 모드 — 시작 블록을 클릭하세요');
-  }
+  if (mode==='connect') { mode='drag'; connectSource=null; document.querySelectorAll('.connect-source').forEach(el=>el.classList.remove('connect-source')); document.getElementById('btnConnect').classList.remove('active'); hideMode(); }
+  else { mode='connect'; document.getElementById('btnConnect').classList.add('active'); document.getElementById('btnDelete').classList.remove('active'); showMode('화살표 연결 모드 — 시작 블록 클릭'); }
 }
-
 function toggleDeleteMode() {
-  if (mode === 'delete') {
-    mode = 'drag';
-    document.getElementById('btnDelete').classList.remove('active');
-    document.getElementById('btnConnect').classList.remove('active');
-    hideMode();
-  } else {
-    mode = 'delete'; connectSource = null;
-    document.querySelectorAll('.connect-source').forEach(el => el.classList.remove('connect-source'));
-    document.getElementById('btnDelete').classList.add('active');
-    document.getElementById('btnConnect').classList.remove('active');
-    showMode('화살표 삭제 모드 — 삭제할 화살표를 클릭하세요');
-  }
+  if (mode==='delete') { mode='drag'; document.getElementById('btnDelete').classList.remove('active'); hideMode(); }
+  else { mode='delete'; connectSource=null; document.querySelectorAll('.connect-source').forEach(el=>el.classList.remove('connect-source')); document.getElementById('btnDelete').classList.add('active'); document.getElementById('btnConnect').classList.remove('active'); showMode('화살표 삭제 모드 — 화살표 클릭'); }
 }
+function showMode(t) { document.getElementById('modeIndicator').textContent=t; document.getElementById('modeIndicator').classList.add('show'); }
+function hideMode() { document.getElementById('modeIndicator').classList.remove('show'); }
 
-function showMode(text) { modeIndicator.textContent = text; modeIndicator.classList.add('show'); }
-function hideMode() { modeIndicator.classList.remove('show'); }
-
-// Mermaid 내보내기
 function exportMermaid() {
-  let mmd = 'flowchart TD\n';
+  let m = 'flowchart TD\n';
   blocksData.forEach(b => {
-    const label = b.desc ? `${b.label} — ${b.desc}` : b.label;
-    if (b.major) {
-      mmd += `    ${b.id}["<b>${label}</b>"]\n`;
-    } else {
-      mmd += `    ${b.id}["${label}"]\n`;
-    }
+    const l = b.desc ? `${b.label} ${b.desc}` : b.label;
+    m += b.major ? `    ${b.id}["<b>${l}</b>"]\n` : `    ${b.id}["${l}"]\n`;
   });
-  mmd += '\n';
-  arrowsData.forEach(a => {
-    if (a.label) {
-      mmd += `    ${a.from} -->|"${a.label}"| ${a.to}\n`;
-    } else {
-      mmd += `    ${a.from} --> ${a.to}\n`;
-    }
-  });
-  mmd += '\n';
-  blocksData.forEach(b => {
-    if (b.major) {
-      mmd += `    style ${b.id} fill:#FFF4ED,stroke:#F25C05,stroke-width:2px,color:#0F172A\n`;
-    } else {
-      mmd += `    style ${b.id} fill:#FFFFFF,stroke:#E2E8F0,color:#334155\n`;
-    }
-  });
-
-  navigator.clipboard.writeText(mmd).then(() => {
-    showToast('Mermaid 코드 복사 완료! 노션 /mermaid 블록에 붙여넣기하세요');
-  }).catch(() => {
-    const ta = document.createElement('textarea');
-    ta.value = mmd;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    showToast('Mermaid 코드 복사 완료!');
-  });
+  m += '\n';
+  arrowsData.forEach(a => { m += a.label ? `    ${a.from} -->|"${a.label}"| ${a.to}\n` : `    ${a.from} --> ${a.to}\n`; });
+  m += '\n';
+  blocksData.forEach(b => { m += b.major ? `    style ${b.id} fill:#FFF4ED,stroke:#F25C05,stroke-width:2px,color:#0F172A\n` : `    style ${b.id} fill:#FFFFFF,stroke:#E2E8F0,color:#334155\n`; });
+  navigator.clipboard.writeText(m).then(() => showToast('Mermaid 코드 복사 완료!')).catch(() => showToast('복사 실패'));
 }
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    mode = 'drag'; connectSource = null;
-    document.querySelectorAll('.connect-source').forEach(el => el.classList.remove('connect-source'));
+    mode='drag'; connectSource=null;
+    document.querySelectorAll('.connect-source').forEach(el=>el.classList.remove('connect-source'));
     document.getElementById('btnConnect').classList.remove('active');
     document.getElementById('btnDelete').classList.remove('active');
     hideMode();
+    closeComments();
   }
 });
 
 function showToast(msg) {
-  const toast = document.getElementById('toast');
-  toast.textContent = msg;
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 2500);
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
 
 renderAllBlocks();
 renderArrows();
 </script>
-
-
-</body></html>
+</body>
+</html>
