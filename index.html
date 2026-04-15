@@ -107,15 +107,27 @@
   }
   .block:hover .block-delete { display: flex; }
 
-  /* 댓글 아이콘 */
+  /* 댓글 점 */
   .block-comment-btn {
-    position: absolute; bottom: -8px; right: -8px;
-    width: 22px; height: 22px; background: #F25C05; color: #FFF;
-    border: 2px solid #FFF; border-radius: 50%; font-size: 11px;
-    cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 12;
-    font-weight: 700;
+    position: absolute; top: -4px; right: -4px;
+    width: 8px; height: 8px; background: #B0BEC5;
+    border: none; border-radius: 50%;
+    cursor: pointer; z-index: 12;
+    transition: transform 0.15s, background 0.15s;
   }
-  .block-comment-btn.has-comments { background: #22C55E; }
+  .block-comment-btn:hover { transform: scale(1.5); background: #78909C; }
+  .block-comment-btn.has-comments { background: #00B8D4; box-shadow: 0 0 6px rgba(0,184,212,0.5); }
+  .block-comment-btn.has-comments:hover { background: #00E5FF; }
+  /* 댓글 툴팁 */
+  .block-comment-btn::after {
+    content: '댓글달기';
+    position: absolute; top: -28px; right: -10px;
+    background: #334155; color: #FFF; font-size: 10px; font-weight: 600;
+    padding: 3px 8px; border-radius: 4px; white-space: nowrap;
+    opacity: 0; pointer-events: none; transition: opacity 0.15s;
+  }
+  .block-comment-btn:hover::after { opacity: 1; }
+  .block-comment-btn.has-comments::after { content: '댓글 보기'; }
 
   /* 댓글 패널 */
   .comment-panel {
@@ -193,7 +205,7 @@
 <div class="header">
   <div>
     <h1>AX 우선순위 보드</h1>
-    <div class="hint">드래그로 배치 · 더블클릭으로 편집 · 💬으로 의견 남기기</div>
+    <div class="hint">드래그로 배치 · 더블클릭으로 편집 · 점 클릭으로 의견 남기기</div>
   </div>
   <div class="header-actions">
     <button class="header-btn secondary" onclick="addBlock(false)">+ 하위 블록</button>
@@ -232,7 +244,7 @@
 <div class="help-panel">
   <b>드래그</b> — 블록 이동<br>
   <b>더블클릭</b> — 텍스트 편집<br>
-  <b>💬</b> — 블록에 의견 남기기<br>
+  <b>점 클릭</b> — 블록에 의견 남기기<br>
   <b>화살표 연결</b> — 블록 두 개 클릭<br>
   <b>화살표 삭제</b> — 화살표 클릭<br>
   <b>ESC</b> — 드래그 모드 복귀
@@ -300,7 +312,7 @@ function renderBlock(b) {
   const hasDesc = b.desc && b.desc.trim();
   div.innerHTML = `
     <button class="block-delete" onclick="deleteBlock('${b.id}')" title="삭제">×</button>
-    <div class="block-comment-btn" onclick="openComments('${b.id}')" title="의견 남기기">💬</div>
+    <div class="block-comment-btn" onclick="openComments('${b.id}')"></div>
     <div class="block-label">${b.label}</div>
     ${hasDesc ? `<div class="block-desc">${b.desc}</div>` : `<div class="block-desc" style="display:none"></div>`}
   `;
@@ -514,10 +526,10 @@ function updateCommentBadge(blockId) {
   const count = (commentsData[blockId] || []).length;
   if (count > 0) {
     btn.classList.add('has-comments');
-    btn.textContent = count;
+    btn.textContent = '';
   } else {
     btn.classList.remove('has-comments');
-    btn.textContent = '💬';
+    btn.textContent = '';
   }
 }
 
